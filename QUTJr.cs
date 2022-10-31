@@ -7,32 +7,38 @@ using UnityEngine.UI;
 public class QUTJr : MonoBehaviour
 {
     public GameObject child;
-    // public GameObject control;
+    public GameObject control;
     public Vector3 jointLocation;
     public Vector3 jointOffset;
     public float angle;
     public float lastAngle;
     public Vector3[] limbVertexLocations;
     public Mesh mesh;
+
+    public Color color;
+
     public Material material;
 
+    public Vector3 offset;
     void Awake()
     {
         // Draw the limb
-        DrawLimb();
+         DrawLimb();
     }
-
+    // Start is called before the first frame update
     void Start()
     {
-        // Move the child to the joint location
+        
         if (child != null)
         {
             child.GetComponent<QUTJr>().MoveByOffset(jointOffset);
         }
+
     }
 
     private void DrawLimb()
     {
+
         mesh = gameObject.AddComponent<MeshFilter>().mesh;
         gameObject.AddComponent<MeshRenderer>().material = material;
 
@@ -44,73 +50,108 @@ public class QUTJr : MonoBehaviour
             limbVertexLocations[3]
         };
 
+        mesh.colors = new Color[] {
+            new Color(232 , 0 , 254, 1),
+            new Color(232 , 0 , 254, 1),
+            new Color(232 , 0 , 254, 1),
+            new Color(232 , 0 , 254, 1)
+        };
+
         mesh.triangles = new int[] { 0, 1, 2, 0, 2, 3 };
-        Vector3[] vertices = mesh.vertices;
-
-        Color[] colors = new Color[vertices.Length];
-        for (int i = 0; i < vertices.Length; i++)
-        {
-            colors[i] = new Color(0.0f, 0.0f, 1.0f, 1.0f);
-        }
-
-        mesh.colors = colors;
     }
 
     // Update is called once per frame
     void Update()
     {
+
+        Matrix3x3 T = Translate(offset);
         lastAngle = angle;
-        if ((Mathf.Round(Time.fixedTime)) % 2 != 0)
+        if (control != null)
         {
-            angle -= 0.0005f;
+            angle = control.GetComponent<Slider>().value;
         }
-        else
-        {
-            angle += 0.0005f;
-        }
-
-
         if (child != null)
         {
-            child.GetComponent<QUTJr>().RotateAroundPoint(jointLocation, angle, lastAngle);
+            child.GetComponent<QUTJr>().RotateAroundPoint(
+            jointLocation, angle, lastAngle);
         }
+
+        if (Input.GetKey("d"))
+        {
+            for(int i = 0; i < 3; i++)
+            {
+                
+            }
+           
+            Debug.Log("Move");
+        }
+        // Recalculate the bounds of the mesh
         mesh.RecalculateBounds();
+
     }
+
+
+    public static Matrix3x3 Rotate(float angle)
+    {
+        Matrix3x3 matrix = new Matrix3x3();
+        // Set the rows of the matrix
+        matrix.SetRow(0, new Vector3(Mathf.Cos(angle), -Mathf.Sin(angle), 0.0f));
+        matrix.SetRow(1, new Vector3(Mathf.Sin(angle), Mathf.Cos(angle), 0.0f));
+        matrix.SetRow(2, new Vector3(0.0f, 0.0f, 1.0f));
+        // Return the matrix
+        return matrix;
+
+    }
+
+    public static Matrix3x3 Translate(Vector3 offset)
+    {
+        // Create a new matrix
+        Matrix3x3 matrix = new Matrix3x3();
+        // Set the rows of the matrix
+        matrix.SetRow(0, new Vector3(1.0f, 0.0f, offset.x));
+        matrix.SetRow(1, new Vector3(0.0f, 1.0f, offset.y));
+        matrix.SetRow(2, new Vector3(0.0f, 0.0f, 1.0f));
+        // Return the matrix
+        return matrix;
+    }
+
+    
 
     public void MoveByOffset(Vector3 offset)
     {
-        // FInd the translation matrix
-        Matrix3x3 T = IGB283Transform.Translate(jointOffset);
-        Vector3[] vertices = mesh.vertices;
+        Matrix3x3 T = Translate(offset);
 
+        Vector3[] vertices = mesh.vertices;
         for (int i = 0; i < vertices.Length; i++)
         {
             vertices[i] = T.MultiplyPoint(vertices[i]);
         }
-
         mesh.vertices = vertices;
+
+
         jointLocation = T.MultiplyPoint(jointLocation);
 
         if (child != null)
         {
-            child.GetComponent<QUTJr>().MoveByOffset(jointOffset);
+            child.GetComponent<QUTJr>().MoveByOffset(offset);
         }
     }
+
+   
 
     public void RotateAroundPoint(Vector3 point, float angle, float lastAngle)
     {
         // Move the point to the origin
-        Matrix3x3 T1 = IGB283Transform.Translate(-point);
+        Matrix3x3 T1 = Translate(-point);
         // Undo the last rotation
-        Matrix3x3 R1 = IGB283Transform.Rotate(-lastAngle);
-        // Move the point back to the original position
-        Matrix3x3 T2 = IGB283Transform.Translate(point);
+        Matrix3x3 R1 = Rotate(-lastAngle);
+        // Move the point back to the oritinal position
+        Matrix3x3 T2 = Translate(point);
         // Perform the new rotation
-        Matrix3x3 R2 = IGB283Transform.Rotate(angle);
+        Matrix3x3 R2 = Rotate(angle);
         // The final translation matrix
         Matrix3x3 M = T2 * R2 * R1 * T1;
 
-        // Move the mesh
         Vector3[] vertices = mesh.vertices;
         for (int i = 0; i < vertices.Length; i++)
         {
@@ -120,11 +161,15 @@ public class QUTJr : MonoBehaviour
         // Apply the transformation to the joint
         jointLocation = M.MultiplyPoint(jointLocation);
 
-        // Apply the transformation to the children
+
         if (child != null)
         {
             child.GetComponent<QUTJr>().RotateAroundPoint(point, angle, lastAngle);
         }
+
     }
+
+
+
 
 }
