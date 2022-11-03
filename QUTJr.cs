@@ -13,9 +13,8 @@ public class QUTJr : MonoBehaviour
     public float angle;
     public float lastAngle;
     public Vector3[] limbVertexLocations;
-    public Mesh mesh;
-
-    public Color color;
+    public Vector3 vertexColour;
+    public Mesh mesh;   
 
     public Material material;
 
@@ -27,13 +26,11 @@ public class QUTJr : MonoBehaviour
     }
     // Start is called before the first frame update
     void Start()
-    {
-        
+    {        
         if (child != null)
         {
             child.GetComponent<QUTJr>().MoveByOffset(jointOffset);
         }
-
     }
 
     private void DrawLimb()
@@ -50,12 +47,13 @@ public class QUTJr : MonoBehaviour
             limbVertexLocations[3]
         };
 
-        mesh.colors = new Color[] {
-            new Color(232 , 0 , 254, 1),
-            new Color(232 , 0 , 254, 1),
-            new Color(232 , 0 , 254, 1),
-            new Color(232 , 0 , 254, 1)
-        };
+        Vector3[] vertices = mesh.vertices;
+        Color[] colors = new Color[vertices.Length];
+        for (int i = 0; i < vertices.Length; i++)
+        {
+            colors[i] = new Color(vertexColour.x, vertexColour.y, vertexColour.z, 1f);
+        }
+        mesh.colors = colors;
 
         mesh.triangles = new int[] { 0, 1, 2, 0, 2, 3 };
     }
@@ -64,7 +62,7 @@ public class QUTJr : MonoBehaviour
     void Update()
     {
 
-        Matrix3x3 T = Translate(offset);
+        Matrix3x3 T = IGB283Transform.Translate(offset);
         lastAngle = angle;
         if (control != null)
         {
@@ -90,36 +88,9 @@ public class QUTJr : MonoBehaviour
 
     }
 
-
-    public static Matrix3x3 Rotate(float angle)
-    {
-        Matrix3x3 matrix = new Matrix3x3();
-        // Set the rows of the matrix
-        matrix.SetRow(0, new Vector3(Mathf.Cos(angle), -Mathf.Sin(angle), 0.0f));
-        matrix.SetRow(1, new Vector3(Mathf.Sin(angle), Mathf.Cos(angle), 0.0f));
-        matrix.SetRow(2, new Vector3(0.0f, 0.0f, 1.0f));
-        // Return the matrix
-        return matrix;
-
-    }
-
-    public static Matrix3x3 Translate(Vector3 offset)
-    {
-        // Create a new matrix
-        Matrix3x3 matrix = new Matrix3x3();
-        // Set the rows of the matrix
-        matrix.SetRow(0, new Vector3(1.0f, 0.0f, offset.x));
-        matrix.SetRow(1, new Vector3(0.0f, 1.0f, offset.y));
-        matrix.SetRow(2, new Vector3(0.0f, 0.0f, 1.0f));
-        // Return the matrix
-        return matrix;
-    }
-
-    
-
     public void MoveByOffset(Vector3 offset)
     {
-        Matrix3x3 T = Translate(offset);
+        Matrix3x3 T = IGB283Transform.Translate(offset);
 
         Vector3[] vertices = mesh.vertices;
         for (int i = 0; i < vertices.Length; i++)
@@ -135,20 +106,18 @@ public class QUTJr : MonoBehaviour
         {
             child.GetComponent<QUTJr>().MoveByOffset(offset);
         }
-    }
-
-   
+    }   
 
     public void RotateAroundPoint(Vector3 point, float angle, float lastAngle)
     {
         // Move the point to the origin
-        Matrix3x3 T1 = Translate(-point);
+        Matrix3x3 T1 = IGB283Transform.Translate(-point);
         // Undo the last rotation
-        Matrix3x3 R1 = Rotate(-lastAngle);
+        Matrix3x3 R1 = IGB283Transform.Rotate(-lastAngle);
         // Move the point back to the oritinal position
-        Matrix3x3 T2 = Translate(point);
+        Matrix3x3 T2 = IGB283Transform.Translate(point);
         // Perform the new rotation
-        Matrix3x3 R2 = Rotate(angle);
+        Matrix3x3 R2 = IGB283Transform.Rotate(angle);
         // The final translation matrix
         Matrix3x3 M = T2 * R2 * R1 * T1;
 
@@ -168,8 +137,4 @@ public class QUTJr : MonoBehaviour
         }
 
     }
-
-
-
-
 }
