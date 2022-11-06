@@ -20,6 +20,9 @@ public class QUTJr : MonoBehaviour
 
     public bool moveRight;
     public bool moveLeft;
+    public bool moveUp;
+
+    public float timer;
 
     void Awake()
     {
@@ -99,8 +102,9 @@ public class QUTJr : MonoBehaviour
         }
         else if (Input.GetKey("w"))
         {
-            Matrix3x3 oneHopThisTime = IGB283Transform.Translate(new Vector3());
-            chaChaRealSmooth = oneHopThisTime * meshToOrigin;
+            //Matrix3x3 oneHopThisTime = IGB283Transform.Translate(new Vector3());
+            //chaChaRealSmooth = oneHopThisTime * meshToOrigin;
+            moveUp = true;
         }
 
 
@@ -114,6 +118,45 @@ public class QUTJr : MonoBehaviour
             Matrix3x3 toTheLeft = IGB283Transform.Translate(new Vector3(-0.01f, 0f, 0f));
             chaChaRealSmooth = toTheLeft * meshToOrigin;
         }
+        
+        if (moveUp == true)
+        {
+            timer += Time.deltaTime;
+            if (timer >= 0 && timer <= 0.1 && moveRight == true)
+            {
+                //child.GetComponent<QUTJr>().MoveByOffset(new Vector3(0.0f, 0.025f, 0f));
+                Matrix3x3 up = IGB283Transform.Translate(new Vector3(0.01f, 0.05f, 0f));
+                chaChaRealSmooth = up * meshToOrigin;
+            }
+            else if (timer >= 0.1 && timer <= 0.2 && moveRight == true)
+            {
+                Matrix3x3 up = IGB283Transform.Translate(new Vector3(0.01f, -0.05f, 0f));
+                chaChaRealSmooth = up * meshToOrigin;
+
+            }
+            if (timer >= 0 && timer <= 0.1 && moveLeft == true)
+            {
+                //child.GetComponent<QUTJr>().MoveByOffset(new Vector3(0.0f, 0.025f, 0f));
+                Matrix3x3 up = IGB283Transform.Translate(new Vector3(-0.01f, 0.05f, 0f));
+                chaChaRealSmooth = up * meshToOrigin;
+            }
+            else if (timer >= 0.1 && timer <= 0.2 && moveLeft == true)
+            {
+                Matrix3x3 up = IGB283Transform.Translate(new Vector3(-0.01f, -0.05f, 0f));
+                chaChaRealSmooth = up * meshToOrigin;
+
+            }
+            else if (timer >=0.2f || jointLocation.y <= -1.8f)
+            {
+                moveUp = false;
+                timer = 0;
+                
+            }
+
+        }
+        
+
+        
 
         Vector3[] vertices = mesh.vertices;
         for (int i = 0; i < vertices.Length; i++)
@@ -126,9 +169,6 @@ public class QUTJr : MonoBehaviour
 
         // Apply the transformation to the joint
         jointLocation = chaChaRealSmooth.MultiplyPoint(jointLocation);
-
-
-        
 
         mesh.RecalculateBounds();
     }
