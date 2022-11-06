@@ -20,6 +20,13 @@ public class QUTJr : MonoBehaviour
 
     public Material material;
 
+    public bool right;
+    public bool left;
+
+    public int jumpTimer;
+    public bool jumpBool;
+
+    float timer;
 
     void Awake()
     {
@@ -29,7 +36,11 @@ public class QUTJr : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        
+        if (child != null)
+        {
+            child.GetComponent<QUTJr>().MoveByOffset(jointOffset);
+        }
+        right = true;
     }
 
     private void DrawLimb()
@@ -56,46 +67,87 @@ public class QUTJr : MonoBehaviour
 
         mesh.triangles = new int[] { 0, 1, 2, 0, 2, 3 };
     }
-    
+
     // Update is called once per frame
     void Update()
     {
 
 
+
         lastAngle = angle;
-        if (control != null)
-        {
-            angle = control.GetComponent<Slider>().value;
-        }
+        /*
         if (child != null)
         {
             child.GetComponent<QUTJr>().RotateAroundPoint(
             jointLocation, angle, lastAngle);
         }
-
+        */
         //Controls the character
         if (Input.GetKey("d"))
         {
-            child.GetComponent<QUTJr>().MoveByOffset(new Vector3(0.01f, 0f, 0.1f));
+            right = true;
+            left = false;
 
         }
-        else if (Input.GetKey("a"))
+        if (Input.GetKey("a"))
         {
-                child.GetComponent<QUTJr>().MoveByOffset(new Vector3(-0.01f, 0f, 0f));
+            left = true;
+            right = false;
         }
-        else if (Input.GetKey("w"))
+        if (Input.GetKey("w"))
         {
-            if (child != null)
-            {
-                child.GetComponent<QUTJr>().MoveByOffset(new Vector3(0.0f, 0.01f, 0f));
-            }    
+            jumpBool = true;
+            
         }
+        
 
-
+        if (right == true && left == false)
+        {
+            moveRight();
+        }
+        else if (left == true && right == false)
+        {
+            moveLeft();
+        }
         // Recalculate the bounds of the mesh
+
+        if (jumpBool == true)
+        {
+            timer += Time.deltaTime;
+            if (timer > 0 && timer <0.2)
+            {
+                child.GetComponent<QUTJr>().MoveByOffset(new Vector3(0.0f, 0.025f, 0f));
+            }
+            else if(timer > 0.2 && timer < 0.4)
+            {
+                child.GetComponent<QUTJr>().MoveByOffset(new Vector3(0.0f, -0.025f, 0f));
+
+            }
+            else if(timer > 0.5)
+            {
+                timer = 0;
+                jumpBool = false;
+            }
+
+        }
+        
+
         mesh.RecalculateBounds();
+        Debug.Log(timer);
 
     }
+
+    public void moveRight()
+    {
+        child.GetComponent<QUTJr>().MoveByOffset(new Vector3(0.01f, 0f, 0f));
+    }
+
+    public void moveLeft()
+    {
+        child.GetComponent<QUTJr>().MoveByOffset(new Vector3(-0.01f, 0f, 0f));
+    }
+
+
 
 
     public void MoveByOffset(Vector3 offset)
