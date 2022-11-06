@@ -80,6 +80,16 @@ public class QUTJr : MonoBehaviour
     void Update()
     {
         lastAngle = angle;
+        if ((Mathf.Round(Time.fixedTime)) % 2 != 0)
+        {
+            angle -= 0.0005f;
+        }
+        else
+        {
+            angle += 0.0005f;
+        }
+
+
         if (child != null)
         {
             child.GetComponent<QUTJr>().RotateAroundPoint(jointLocation, angle, lastAngle);
